@@ -45,6 +45,31 @@ function App() {
     <ClerkProvider
       publishableKey={clerkPubKey}
       navigate={(to) => (window.location.href = to)}
+      appearance={{
+        elements: {
+          rootBox: "w-full",
+          card: "bg-transparent shadow-none",
+          headerTitle: "text-white text-2xl",
+          headerSubtitle: "text-white/80",
+          formButtonPrimary:
+            "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700",
+          formFieldLabel: "text-white",
+          formFieldInput: "bg-white/20 border-white/30 text-white",
+          footerActionLink: "text-indigo-400 hover:text-indigo-300",
+          userButtonPopoverCard: "bg-gray-900 border border-white/20",
+          userButtonPopoverActionButton: "text-white hover:bg-white/10",
+          userButtonPopoverActionButtonText: "text-white",
+          userButtonPopoverActionButtonIcon: "text-white",
+          userButtonBox: "cursor-pointer",
+          userPreviewMainIdentifier: "text-white",
+          userPreviewSecondaryIdentifier: "text-gray-300",
+          avatarBox: "border-2 border-white/30",
+        },
+        variables: {
+          colorPrimary: "#6366f1",
+          colorBackground: "#1e1b4b",
+        },
+      }}
     >
       <AuthProvider>
         <ToastWrapper>

@@ -13,7 +13,8 @@ import {
 } from "./ui/form";
 import { Textarea } from "./ui/textarea";
 import { useAuth } from "../context/AuthContext";
-import AuthModal from "./AuthModal";
+import { useUser } from "@clerk/clerk-react";
+import AuthModal from "./AuthModal"; // custom popup modal
 
 const formSchema = z.object({
   problem: z
@@ -31,6 +32,7 @@ interface IdeaFormProps {
 
 const IdeaForm = ({ onSubmit = () => {} }: IdeaFormProps) => {
   const { user, isLoading } = useAuth();
+  const { isSignedIn } = useUser();
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -42,70 +44,63 @@ const IdeaForm = ({ onSubmit = () => {} }: IdeaFormProps) => {
     },
   });
 
-  // Check for pending form data after login
   useEffect(() => {
-    if (user) {
-      const pendingData = sessionStorage.getItem("pendingFormData");
-      if (pendingData) {
-        try {
-          const parsedData = JSON.parse(pendingData);
-          // Submit the pending form data
-          const timeoutId = setTimeout(() => {
-            // Fallback to clear loading state after 10 seconds
-            form.formState.isSubmitting && form.reset();
-            console.warn("Form submission timeout: clearing loading state.");
-          }, 10000);
-
-          // Submit and clear timeout when done
-          onSubmit(parsedData).finally(() => {
-            clearTimeout(timeoutId);
-            // Clear the pending data
+    const processPendingData = async () => {
+      if (user) {
+        const pendingData = sessionStorage.getItem("pendingFormData");
+        if (pendingData) {
+          try {
             sessionStorage.removeItem("pendingFormData");
-          });
-        } catch (error) {
-          console.error("Error parsing pending form data:", error);
-          sessionStorage.removeItem("pendingFormData");
+            const parsedData = JSON.parse(pendingData);
+
+            const timeoutId = setTimeout(() => {
+              form.reset();
+              console.warn("Form submission timeout.");
+            }, 10000);
+
+            try {
+              const result = onSubmit(parsedData);
+              if (result instanceof Promise) await result;
+            } finally {
+              clearTimeout(timeoutId);
+              if (form.formState.isSubmitting) form.reset();
+            }
+          } catch (error) {
+            console.error("Error processing pending data:", error);
+            if (form.formState.isSubmitting) form.reset();
+          }
         }
       }
-    }
+    };
+
+    processPendingData();
   }, [user, onSubmit, form]);
 
-  const handleSubmit = (data: z.infer<typeof formSchema>) => {
-    if (!user && !isLoading) {
-      // Store form data in session storage to retrieve after login
+  const handleSubmit = async (data: z.infer<typeof formSchema>) => {
+    if (!isSignedIn && !isLoading) {
       sessionStorage.setItem("pendingFormData", JSON.stringify(data));
       setShowAuthModal(true);
       return;
     }
 
-    // Set up timeout to clear loading state if submission hangs
-    const timeoutId = setTimeout(() => {
-      if (form.formState.isSubmitting) {
-        form.reset();
-        console.warn("Form submission timeout: clearing loading state.");
-      }
-    }, 10000);
-
-    // Call the onSubmit prop with the form data and clear timeout when done
     try {
-      const result = onSubmit(data);
-      if (result instanceof Promise) {
-        result
-          .catch((error) => {
-            console.error("Error submitting form:", error);
-            form.reset();
-          })
-          .finally(() => {
-            clearTimeout(timeoutId);
-          });
-      } else {
-        // If not a promise, clear the timeout
+      const timeoutId = setTimeout(() => {
+        if (form.formState.isSubmitting) {
+          form.reset();
+          console.warn("Submission timeout.");
+        }
+      }, 10000);
+
+      try {
+        const result = onSubmit(data);
+        if (result instanceof Promise) await result;
+      } finally {
         clearTimeout(timeoutId);
       }
     } catch (error) {
-      console.error("Error submitting form:", error);
-      form.reset();
-      clearTimeout(timeoutId);
+      console.error("Submission error:", error);
+    } finally {
+      if (form.formState.isSubmitting) form.reset();
     }
   };
 
@@ -145,7 +140,7 @@ const IdeaForm = ({ onSubmit = () => {} }: IdeaFormProps) => {
                     </FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="E.g., Solo entrepreneurs and indie hackers looking to launch micro-SaaS products..."
+                        placeholder="E.g., Solo entrepreneurs and indie hackers..."
                         className="min-h-[120px] resize-none bg-white/30 backdrop-blur-sm border-white/40 shadow-md text-white placeholder:text-white/70"
                         {...field}
                       />
@@ -167,7 +162,7 @@ const IdeaForm = ({ onSubmit = () => {} }: IdeaFormProps) => {
                     </FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="E.g., A platform that provides pre-built templates, no-code tools, and guided frameworks..."
+                        placeholder="E.g., A platform with templates, no-code tools, and guides..."
                         className="min-h-[280px] resize-none bg-white/30 backdrop-blur-sm border-white/40 shadow-md text-white placeholder:text-white/70"
                         {...field}
                       />
@@ -180,47 +175,63 @@ const IdeaForm = ({ onSubmit = () => {} }: IdeaFormProps) => {
           </div>
 
           <div className="flex justify-center">
-            <Button
-              type="submit"
-              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-8 py-2 rounded-lg text-lg transition-all shadow-lg hover:shadow-xl"
-              disabled={isLoading || form.formState.isSubmitting}
-            >
-              {isLoading || form.formState.isSubmitting ? (
-                <div className="flex items-center">
-                  <svg
-                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Loading...
-                </div>
-              ) : (
-                "Generate My Startup Package"
-              )}
-            </Button>
+            {!isSignedIn ? (
+              <>
+                <Button
+                  type="button"
+                  onClick={() => setShowAuthModal(true)}
+                  className="bg-[linear-gradient(270deg,#8338ec,#ff006e,#3a86ff,#ffbe0b)] animate-gradient-move text-white px-8 py-2 rounded-lg text-lg transition-all shadow-lg hover:shadow-xl"
+                >
+                  Generate My Startup Package
+                </Button>
+              </>
+            ) : (
+              <Button
+                type="submit"
+                className="bg-[linear-gradient(270deg,#8338ec,#ff006e,#3a86ff,#ffbe0b)] animate-gradient-move text-white px-8 py-2 rounded-lg text-lg transition-all shadow-lg hover:shadow-xl"
+                disabled={isLoading || form.formState.isSubmitting}
+              >
+                {isLoading || form.formState.isSubmitting ? (
+                  <div className="flex items-center">
+                    <svg
+                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Loading...
+                  </div>
+                ) : (
+                  "Generate My Startup Package"
+                )}
+              </Button>
+            )}
           </div>
         </form>
       </Form>
 
+      {/* Custom popup modal for authentication */}
       <AuthModal
         open={showAuthModal}
         onOpenChange={setShowAuthModal}
-        showSignIn={false}
+        onSignUp={() => {
+          setShowAuthModal(false);
+          setTimeout(() => setShowAuthModal(true), 1500);
+        }}
       />
     </>
   );

@@ -1,6 +1,6 @@
 // Edge function to generate viral post ideas using OpenAI via Pica passthrough
 
-import { corsHeaders } from "@shared/cors.ts";
+import { corsHeaders } from "../_shared/cors.ts";
 
 Deno.serve(async (req) => {
   // Handle CORS preflight requests

@@ -1,5 +1,5 @@
-import { corsHeaders } from "@shared/cors.ts";
-import { UserResult } from "@shared/user.ts";
+import { corsHeaders } from "../_shared/cors.ts";
+import { UserResult } from "../_shared/user.ts";
 
 Deno.serve(async (req) => {
   // Handle CORS preflight requests

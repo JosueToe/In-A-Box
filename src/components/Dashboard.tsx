@@ -6,11 +6,39 @@ import Header from "./Header";
 import SavedStartups from "./SavedStartups";
 import { Button } from "./ui/button";
 import { ArrowLeft } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import { verifyStripeSession } from "../lib/auth";
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [activeTab, setActiveTab] = useState("launches");
+  const location = useLocation();
+
+  // Check for Stripe session ID in URL parameters
+  React.useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const sessionId = searchParams.get("session_id");
+
+    if (sessionId && user) {
+      const handleStripeSession = async () => {
+        try {
+          // Verify the session and update user's premium status
+          const success = await verifyStripeSession(user.id, sessionId);
+          if (success) {
+            // Refresh user data to get updated premium status
+            await refreshUser();
+            // Remove session_id from URL
+            const newUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, newUrl);
+          }
+        } catch (error) {
+          console.error("Error handling Stripe session:", error);
+        }
+      };
+
+      handleStripeSession();
+    }
+  }, [location, user, refreshUser]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-900 via-indigo-900 to-purple-900">

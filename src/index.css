@@ -93,6 +93,11 @@
     animation: gradient 8s ease-in-out infinite;
   }
 
+  .animate-gradient-move {
+    background-size: 200% 200%;
+    animation: gradient-move 3s linear infinite;
+  }
+
   @keyframes float {
     0%,
     100% {
@@ -125,7 +130,7 @@
     }
   }
 
-  @keyframes gradientMove {
+  @keyframes gradient-move {
     0% {
       background-position: 0% 50%;
     }
