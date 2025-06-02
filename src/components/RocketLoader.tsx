@@ -3,15 +3,16 @@ import { motion } from "framer-motion";
 
 const RocketLoader = () => {
   return (
-    <div className="flex flex-col items-center justify-center p-8 bg-white/10 backdrop-blur-md rounded-xl w-full h-full min-h-[300px]">
-      <div className="flex items-center justify-center w-full h-full">
+    <div className="flex items-center justify-center w-full h-full min-h-[300px] bg-white/10 backdrop-blur-md rounded-xl">
+      <div className="flex flex-col items-center justify-center text-center">
+        {/* Rocket Container */}
         <div className="relative h-40 w-40 flex items-center justify-center">
           {/* Launchpad */}
           <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-24 h-2 bg-gray-700 rounded-full"></div>
 
           {/* Rocket */}
           <motion.div
-            className="absolute bottom-2 left-1/2 transform -translate-x-1/2"
+            className="absolute bottom-2 left-1/1 transform -translate-x-1/2"
             animate={{
               y: [-5, -15, -5],
             }}
@@ -39,7 +40,7 @@ const RocketLoader = () => {
               <motion.div
                 className="absolute -bottom-2 left-1/2 transform -translate-x-1/2"
                 animate={{
-                  height: [10, 25, 10],
+                  height: [10, 10, 10],
                   width: [8, 12, 8],
                 }}
                 transition={{
@@ -53,17 +54,21 @@ const RocketLoader = () => {
             </div>
           </motion.div>
         </div>
+
+        {/* Loading Text */}
+        <motion.div
+          className="mt-6"
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <p className="text-lg font-medium text-white">
+            Launching your idea...
+          </p>
+          <p className="text-sm text-white/70 mt-1">
+            This may take a few moments
+          </p>
+        </motion.div>
       </div>
-      <motion.div
-        className="mt-6 text-center"
-        animate={{ opacity: [0.5, 1, 0.5] }}
-        transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-      >
-        <p className="text-lg font-medium text-white">Launching your idea...</p>
-        <p className="text-sm text-white/70 mt-1">
-          This may take a few moments
-        </p>
-      </motion.div>
     </div>
   );
 };
