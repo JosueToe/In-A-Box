@@ -77,12 +77,14 @@ const IdeaForm = ({ onSubmit = () => {} }: IdeaFormProps) => {
   }, [user, onSubmit, form]);
 
   const handleSubmit = async (data: z.infer<typeof formSchema>) => {
+    // Only show auth modal if user is NOT signed in
     if (!isSignedIn && !isLoading) {
       sessionStorage.setItem("pendingFormData", JSON.stringify(data));
       setShowAuthModal(true);
       return;
     }
 
+    // If user is signed in, proceed with submission
     try {
       const timeoutId = setTimeout(() => {
         if (form.formState.isSubmitting) {
@@ -102,6 +104,14 @@ const IdeaForm = ({ onSubmit = () => {} }: IdeaFormProps) => {
     } finally {
       if (form.formState.isSubmitting) form.reset();
     }
+  };
+
+  const handleGenerateClick = () => {
+    // Check if user is signed in before showing modal
+    if (!isSignedIn && !isLoading) {
+      setShowAuthModal(true);
+    }
+    // If signed in, the form will handle submission via the onSubmit event
   };
 
   return (
@@ -175,64 +185,54 @@ const IdeaForm = ({ onSubmit = () => {} }: IdeaFormProps) => {
           </div>
 
           <div className="flex justify-center">
-            {!isSignedIn ? (
-              <>
-                <Button
-                  type="button"
-                  onClick={() => setShowAuthModal(true)}
-                  className="bg-[linear-gradient(270deg,#8338ec,#ff006e,#3a86ff,#ffbe0b)] animate-gradient-move text-white px-8 py-2 rounded-lg text-lg transition-all shadow-lg hover:shadow-xl"
-                >
-                  Generate My Startup Package
-                </Button>
-              </>
-            ) : (
-              <Button
-                type="submit"
-                className="bg-[linear-gradient(270deg,#8338ec,#ff006e,#3a86ff,#ffbe0b)] animate-gradient-move text-white px-8 py-2 rounded-lg text-lg transition-all shadow-lg hover:shadow-xl"
-                disabled={isLoading || form.formState.isSubmitting}
-              >
-                {isLoading || form.formState.isSubmitting ? (
-                  <div className="flex items-center">
-                    <svg
-                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    Loading...
-                  </div>
-                ) : (
-                  "Generate My Startup Package"
-                )}
-              </Button>
-            )}
+            <Button
+              type="submit"
+              className="bg-[linear-gradient(270deg,#8338ec,#ff006e,#3a86ff,#ffbe0b)] animate-gradient-move text-white px-8 py-2 rounded-lg text-lg transition-all shadow-lg hover:shadow-xl"
+              disabled={isLoading || form.formState.isSubmitting}
+            >
+              {isLoading || form.formState.isSubmitting ? (
+                <div className="flex items-center">
+                  <svg
+                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Loading...
+                </div>
+              ) : (
+                "Generate My Startup Package"
+              )}
+            </Button>
           </div>
         </form>
       </Form>
 
-      {/* Custom popup modal for authentication */}
-      <AuthModal
-        open={showAuthModal}
-        onOpenChange={setShowAuthModal}
-        onSignUp={() => {
-          setShowAuthModal(false);
-          setTimeout(() => setShowAuthModal(true), 1500);
-        }}
-      />
+      {/* Custom popup modal for authentication - only show for non-signed-in users */}
+      {showAuthModal && !isSignedIn && (
+        <AuthModal
+          open={showAuthModal}
+          onOpenChange={setShowAuthModal}
+          onSignUp={() => {
+            setShowAuthModal(false);
+            setTimeout(() => setShowAuthModal(true), 1500);
+          }}
+        />
+      )}
     </>
   );
 };
