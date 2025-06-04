@@ -62,7 +62,7 @@ function App() {
                 path="/sign-in/*"
                 element={
                   <div className="min-h-screen bg-gradient-to-b from-blue-900 via-indigo-900 to-purple-900 flex items-center justify-center p-4">
-                    <div className="bg-white/10 backdrop-blur-md rounded-xl border border-white/20 shadow-xl p-8 w-full max-w-md">
+                    <div className="bg-white/10 backdrop-blur-md rounded-xl border border-white/20 shadow-xl p-6 w-full max-w-md">
                       <ClerkSignIn
                         routing="path"
                         path="/sign-in"
@@ -92,7 +92,7 @@ function App() {
                 path="/sign-up/*"
                 element={
                   <div className="min-h-screen bg-gradient-to-b from-blue-900 via-indigo-900 to-purple-900 flex items-center justify-center p-4">
-                    <div className="bg-white/10 backdrop-blur-md rounded-xl border border-white/20 shadow-xl p-8 w-full max-w-md">
+                    <div className="bg-white/10 backdrop-blur-md rounded-xl border border-white/20 shadow-xl p-6 w-full max-w-md">
                       <ClerkSignUp
                         routing="path"
                         path="/sign-up"

@@ -24,9 +24,6 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           socialButtonsPlacement: "top",
         },
         elements: {
-          // ❌ Removed rootBox to prevent layout shift
-          // rootBox: "flex items-center justify-center min-h-screen",
-
           card: "bg-[#111827] text-white border border-white/10 shadow-xl rounded-xl w-full max-w-md p-6",
 
           headerTitle: "text-white text-2xl font-bold",
@@ -51,8 +48,11 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 
           modalContent: "text-white",
           modalCloseButton: "text-white",
+
+          // ✅ Popover menu text fix
           userButtonPopoverCard:
             "bg-[#1f2937] border border-white/10 shadow-xl",
+          userButtonPopoverActionButton: "text-white hover:bg-[#374151]",
           userButtonPopoverActionButtonText: "text-white",
           userButtonPopoverActionButtonIcon: "text-white",
         },
