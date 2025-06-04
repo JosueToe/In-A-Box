@@ -5,47 +5,20 @@ import { ArrowLeft, Check, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
 import Header from "./Header";
 import { useAuth } from "../context/AuthContext";
+import { useUser } from "@clerk/clerk-react";
 import { supabase } from "../lib/auth";
+import SubscriptionModal from "./SubscriptionModal";
 
 const Pricing = () => {
   const { user, isLoading, login } = useAuth();
+  const { isSignedIn } = useUser();
   const navigate = useNavigate();
 
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
-  const handleSubscribe = async () => {
-    if (!user) {
-      // Store that the user wanted to upgrade
-      sessionStorage.setItem("pendingUpgrade", "true");
-      login();
-      return;
-    }
-
-    setIsProcessing(true);
-    try {
-      // Create a checkout session using our edge function
-      const { data, error } = await supabase.functions.invoke(
-        "supabase-functions-create_checkout_session",
-        {
-          body: {
-            successUrl: `${window.location.origin}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
-            cancelUrl: `${window.location.origin}/pricing`,
-          },
-        },
-      );
-
-      if (error || !data.success) {
-        console.error("Error creating checkout session:", error || data.error);
-        return;
-      }
-
-      // Redirect to Stripe Checkout
-      window.location.href = data.data.url;
-    } catch (error) {
-      console.error("Error creating checkout session:", error);
-    } finally {
-      setIsProcessing(false);
-    }
+  const handleSubscribe = () => {
+    setShowSubscriptionModal(true);
   };
 
   return (
@@ -186,16 +159,8 @@ const Pricing = () => {
               <Button
                 className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white"
                 onClick={handleSubscribe}
-                disabled={isProcessing}
               >
-                {isProcessing ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  "Subscribe Now"
-                )}
+                Subscribe Now
               </Button>
             </div>
           </motion.div>
@@ -210,6 +175,11 @@ const Pricing = () => {
           </p>
         </div>
       </div>
+
+      <SubscriptionModal
+        open={showSubscriptionModal}
+        onOpenChange={setShowSubscriptionModal}
+      />
     </div>
   );
 };

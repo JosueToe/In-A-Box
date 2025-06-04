@@ -12,6 +12,7 @@ import {
 } from "./ui/dialog";
 import { useAuth } from "../context/AuthContext";
 import { SignInButton, useUser } from "@clerk/clerk-react";
+import { supabase } from "../lib/auth";
 import SignupModal from "./SignupModal";
 
 interface PaywallModalProps {
@@ -33,6 +34,7 @@ const PaywallModal = ({
   const [showSignupModal, setShowSignupModal] = useState(false);
 
   const handleUpgrade = async () => {
+    // Check if user is signed in with Clerk first
     if (!isSignedIn) {
       // Store that the user wanted to upgrade
       sessionStorage.setItem("pendingUpgrade", "true");
@@ -41,17 +43,38 @@ const PaywallModal = ({
       return;
     }
 
+    // If signed in but user data not loaded yet, wait
+    if (!user) {
+      console.log("User signed in but data not loaded yet");
+      return;
+    }
+
     setIsProcessing(true);
     try {
-      // In a real implementation, this would open Stripe checkout
-      // For now, we'll just simulate upgrading the user
-      const success = await upgradeUser(user.id);
-      if (success) {
-        onOpenChange(false);
+      // Create a checkout session using our edge function
+      const { data, error } = await supabase.functions.invoke(
+        "supabase-functions-create_stripe_checkout",
+        {
+          body: {
+            email: user.email,
+            successUrl: `${window.location.origin}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
+            cancelUrl: `${window.location.origin}/pricing`,
+          },
+        },
+      );
+
+      if (error || !data.success) {
+        console.error("Error creating checkout session:", error || data.error);
+        alert("Failed to create checkout session. Please try again.");
+        setIsProcessing(false);
+        return;
       }
+
+      // Redirect to Stripe Checkout - don't reset processing state as we're redirecting
+      window.location.href = data.data.url;
     } catch (error) {
-      console.error("Error upgrading user:", error);
-    } finally {
+      console.error("Error creating checkout session:", error);
+      alert("An error occurred. Please try again.");
       setIsProcessing(false);
     }
   };
